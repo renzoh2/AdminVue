@@ -143,7 +143,7 @@ const stepTwoValidation = (e) => {
   formStep.step = prop.identifier === 'edit' ? 4 : falseChecker === true ? 2 : 3;
   formStep.submit = falseChecker === false ? true : false;
   if (falseChecker === false) formData.image = files;
-  errorNode.innerHTML = formData.image === null ? 'Invalid file/s. Please insert correct file image/s. ' : '';
+  errorNode.innerHTML = formData.image === null ? 'Invalid file/s. This is only accepts png, jpg and jpeg image file/s.' : '';
 };
 
 const stepThreeValidation = (e) => {
