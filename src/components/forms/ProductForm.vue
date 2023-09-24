@@ -25,7 +25,8 @@ onMounted(async () => {
 });
 
 const formStep = reactive({
-  step: 1
+  step: 1,
+  submit: true
 });
 
 const formBuild = reactive({
@@ -69,27 +70,9 @@ const submitData = async () => {
   }
 };
 
-const stepOneValidation = (type = 'text', event) => {
-  const currentTarget = event.target;
-  const parent = currentTarget.parentNode;
-  const errorNode = parent.closest('.form-group').querySelector('span.error-message');
-
-  switch (type) {
-    case 'text': {
-      errorNode.innerHTML = currentTarget.value === '' ? 'Name is required' : '';
-      break;
-    }
-    case 'select': {
-      errorNode.innerHTML = currentTarget.value === '' ? 'Category is required' : '';
-      break;
-    }
-    default:
-      break;
-  }
-};
-
 const editorRef = ref(null);
 const fileRef = ref(null);
+const dateTimeRef = ref(null);
 
 //Watch CKeditor (Rich Editor Plugin)
 watch(
@@ -110,46 +93,68 @@ watch(
   },
   () => {
     formStep.step = formData.name != '' && formData.description != '' && formData.category != '' ? 2 : 1;
-    if (prop.identifier === 'edit') formStep.step = 4; //To Force Edit
+    formStep.submit = formData.name != '' && formData.description != '' && formData.category != '' ? true : false;
+    if (prop.identifier === 'edit') {
+      formStep.step = 4; //To Force Edit
+    }
   }
 );
+
+const stepOneValidation = (type = 'text', event) => {
+  const currentTarget = event.target;
+  const parent = currentTarget.parentNode;
+  const errorNode = parent.closest('.form-group').querySelector('span.error-message');
+
+  switch (type) {
+    case 'text': {
+      errorNode.innerHTML = currentTarget.value === '' ? 'Name is required' : '';
+      break;
+    }
+    case 'select': {
+      errorNode.innerHTML = currentTarget.value === '' ? 'Category is required' : '';
+      break;
+    }
+    default:
+      break;
+  }
+};
 
 const stepTwoValidation = (e) => {
   formData.image = null;
   const parent = fileRef.value;
   const errorNode = parent.querySelector('span.error-message');
-  formStep.step = 2;
+  formStep.step = prop.identifier === 'edit' ? 4 : 2;
   var files = e.target.files || e.dataTransfer.files;
-
+  let falseChecker = false;
   if (files.length === 0) {
-    errorNode.innerHTML = formData.image === null ? 'No file. Please insert image file/s. ' : '';
-    formStep.step = 2;
+    errorNode.innerHTML = formData.image === null && prop.identifier === 'create' ? 'No file. Please insert image file/s. ' : '';
+    formStep.submit = falseChecker === false && prop.identifier === 'create' ? false : true;
+    console.log(formStep.submit);
     return;
   }
-  let falseChecker = false;
-  //Checker
+
   Object.values(files).forEach((value) => {
-    console.log(value['type']);
     if (!['image/png', 'image/jpeg', 'image/jpg'].includes(value['type'])) {
       falseChecker = true;
       return;
     }
   });
-  formStep.step = 2;
 
-  if (falseChecker === false) {
-    formData.image = files;
-    formStep.step = 3;
-  }
-
+  formStep.step = prop.identifier === 'edit' ? 4 : falseChecker === true ? 2 : 3;
+  formStep.submit = falseChecker === false ? true : false;
+  if (falseChecker === false) formData.image = files;
   errorNode.innerHTML = formData.image === null ? 'Invalid file/s. Please insert correct file image/s. ' : '';
-  if (prop.identifier === 'edit') formStep.step = 4; //To Force Edit
 };
 
 const stepThreeValidation = (e) => {
-  console.log(e);
+  const parent = dateTimeRef.value;
+  const errorNode = parent.querySelector('span.error-message');
   formStep.step = 3;
-  if (formData.dateTimeCreated != null) formStep.step = 4;
+  if (formData.dateTimeCreated != '') {
+    formStep.step = 4;
+    formStep.submit = true;
+  }
+  errorNode.innerHTML = formData.dateTimeCreated === '' ? 'Please input date and time. ' : '';
 };
 </script>
 <template>
@@ -194,13 +199,13 @@ const stepThreeValidation = (e) => {
             <p class="mt-1 text-sm text-gray-500" id="file_input_help">PNG, JPG or JPEG only.</p>
             <span class="text-red-500 error-message"></span>
           </div>
-          <div v-if="formStep.step >= 3">
+          <div ref="dateTimeRef" v-if="formStep.step >= 3">
             <label>Date/Time Created</label>
             <VueDatePicker v-model="formData.dateTimeCreated" @update:model-value="changeDateTime" :is-24="false" @blur="stepThreeValidation"></VueDatePicker>
             <span class="text-red-500 error-message"></span>
           </div>
         </form>
-        <div class="w-full p-5" v-if="formStep.step >= 4">
+        <div class="w-full p-5" v-if="formStep.step >= 4 && formStep.submit === true">
           <button class="bg-blue-500 text-white w-full p-2 rounded m-auto" @click="submitData">
             {{ formBuild.button }}
           </button>
