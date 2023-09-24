@@ -146,7 +146,7 @@ const stepTwoValidation = (e) => {
   errorNode.innerHTML = formData.image === null ? 'Invalid file/s. This is only accepts png, jpg and jpeg image file/s.' : '';
 };
 
-const stepThreeValidation = (e) => {
+const stepThreeValidation = () => {
   const parent = dateTimeRef.value;
   const errorNode = parent.querySelector('span.error-message');
   formStep.step = 3;
