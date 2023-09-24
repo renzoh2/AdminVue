@@ -1,4 +1,5 @@
 const CATEGORY_LIST = [
+  { value: '', name: 'N/A' },
   { value: 'Bag', name: 'Bag' },
   { value: 'Shirt', name: 'Shirt' },
   { value: 'Shoes', name: 'Shoes' },

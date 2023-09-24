@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, onMounted } from 'vue';
+import { reactive, onMounted, ref, watch } from 'vue';
 import { Input, Select } from 'flowbite-vue';
 import { productStore } from './../../store/products';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -74,10 +74,45 @@ const submitData = async () => {
   }
 };
 
-const stepOneValidation = () => {
-  formStep.step2 = false;
-  if (formData.name != '' && formData.description != '' && formData.category != '') formStep.step2 = true;
+const stepOneValidation = (type = 'text', event) => {
+  const currentTarget = event.target;
+  const parent = currentTarget.parentNode;
+  const errorNode = parent.closest('.form-group').querySelector('span.error-message');
+
+  switch (type) {
+    case 'text': {
+      errorNode.innerHTML = currentTarget.value === '' ? 'Name is required' : '';
+      break;
+    }
+    case 'select': {
+      errorNode.innerHTML = currentTarget.value === '' ? 'Category is required' : '';
+      break;
+    }
+    default:
+      break;
+  }
 };
+
+const editorRef = ref(null);
+
+watch(
+  () => formData.description,
+  (description) => {
+    const parent = editorRef.value;
+    const errorNode = parent.querySelector('span.error-message');
+    errorNode.innerHTML = description === '' ? 'Description is required' : '';
+  }
+);
+
+watch(
+  () => {
+    const { name, description, category } = formData;
+    return { name, description, category };
+  },
+  () => {
+    formStep.step2 = formData.name != '' && formData.description != '' && formData.category != '';
+  }
+);
 
 const stepTwoValidation = (e) => {
   formStep.step3 = false;
@@ -130,23 +165,27 @@ const stepThreeValidation = () => {
         </div>
         <form class="px-10 py-10 flex flex-col gap-5">
           <div v-if="formStep.step1 === true">
-            <div>
+            <div class="form-group">
               <label>Name</label>
-              <Input v-model="formData.name" placeholder="Enter Product Name" @input="stepOneValidation" />
+              <Input v-model="formData.name" placeholder="Enter Product Name" @input="stepOneValidation('text', $event)" />
+              <span class="text-red-500 error-message"></span>
             </div>
-            <div>
+            <div class="form-group">
               <label>Category</label>
-              <Select v-model="formData.category" :options="Categories" @change="stepOneValidation" />
+              <Select v-model="formData.category" :options="Categories" @change="stepOneValidation('select', $event)" />
+              <span class="text-red-500 error-message"></span>
             </div>
-            <div>
+            <div ref="editorRef" class="form-group">
               <label>Description</label>
-              <ckeditor :editor="ClassicEditor" v-model="formData.description" @input="stepOneValidation"></ckeditor>
+              <ckeditor :editor="ClassicEditor" v-model="formData.description"></ckeditor>
+              <span class="text-red-500 error-message"></span>
             </div>
           </div>
           <div v-if="formStep.step2 === true">
             <label>Upload Images</label>
             <input multiple v-on:change="stepTwoValidation" accept="image/x-png,image/gif,image/jpeg" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" aria-describedby="file_input_help" id="file_input" type="file" />
             <p class="mt-1 text-sm text-gray-500" id="file_input_help">PNG, JPG or JPEG only.</p>
+            <span class="text-red-500 error-message"></span>
           </div>
           <div v-if="formStep.step3 === true">
             <label>Date/Time Created</label>
