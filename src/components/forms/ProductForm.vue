@@ -13,9 +13,7 @@ const prop = defineProps(['identifier']);
 
 onMounted(async () => {
   if (prop.identifier === 'edit') {
-    formStep.step2 = true;
-    formStep.step3 = true;
-    formStep.submit = true;
+    formStep.step = 4;
     const { data } = await productStore().fetchDataById(router.currentRoute.value.params.id);
     formData.name = data.data.name;
     formData.description = data.data.description;
@@ -27,10 +25,7 @@ onMounted(async () => {
 });
 
 const formStep = reactive({
-  step1: true,
-  step2: false,
-  step3: false,
-  submit: false
+  step: 1
 });
 
 const formBuild = reactive({
@@ -94,13 +89,17 @@ const stepOneValidation = (type = 'text', event) => {
 };
 
 const editorRef = ref(null);
+const fileRef = ref(null);
 
+//Watch CKeditor (Rich Editor Plugin)
 watch(
   () => formData.description,
   (description) => {
-    const parent = editorRef.value;
-    const errorNode = parent.querySelector('span.error-message');
-    errorNode.innerHTML = description === '' ? 'Description is required' : '';
+    if (editorRef.value) {
+      const parent = editorRef.value;
+      const errorNode = parent.querySelector('span.error-message');
+      errorNode.innerHTML = description === '' ? 'Description is required' : '';
+    }
   }
 );
 
@@ -110,39 +109,47 @@ watch(
     return { name, description, category };
   },
   () => {
-    formStep.step2 = formData.name != '' && formData.description != '' && formData.category != '';
+    formStep.step = formData.name != '' && formData.description != '' && formData.category != '' ? 2 : 1;
+    if (prop.identifier === 'edit') formStep.step = 4; //To Force Edit
   }
 );
 
 const stepTwoValidation = (e) => {
-  formStep.step3 = false;
+  formData.image = null;
+  const parent = fileRef.value;
+  const errorNode = parent.querySelector('span.error-message');
+  formStep.step = 2;
   var files = e.target.files || e.dataTransfer.files;
 
-  if (files == null) {
+  if (files.length === 0) {
+    errorNode.innerHTML = formData.image === null ? 'No file. Please insert image file/s. ' : '';
+    formStep.step = 2;
     return;
   }
-
   let falseChecker = false;
   //Checker
   Object.values(files).forEach((value) => {
+    console.log(value['type']);
     if (!['image/png', 'image/jpeg', 'image/jpg'].includes(value['type'])) {
       falseChecker = true;
       return;
     }
   });
+  formStep.step = 2;
 
-  formData.image = files;
-  formStep.step3 = true;
-
-  if (falseChecker === true) {
-    formData.image = null;
-    formStep.step3 = true;
+  if (falseChecker === false) {
+    formData.image = files;
+    formStep.step = 3;
   }
+
+  errorNode.innerHTML = formData.image === null ? 'Invalid file/s. Please insert correct file image/s. ' : '';
+  if (prop.identifier === 'edit') formStep.step = 4; //To Force Edit
 };
 
-const stepThreeValidation = () => {
-  formStep.submit = false;
-  if (formData.dateTimeCreated != null) formStep.submit = true;
+const stepThreeValidation = (e) => {
+  console.log(e);
+  formStep.step = 3;
+  if (formData.dateTimeCreated != null) formStep.step = 4;
 };
 </script>
 <template>
@@ -164,7 +171,7 @@ const stepThreeValidation = () => {
           </div>
         </div>
         <form class="px-10 py-10 flex flex-col gap-5">
-          <div v-if="formStep.step1 === true">
+          <div v-if="formStep.step >= 1">
             <div class="form-group">
               <label>Name</label>
               <Input v-model="formData.name" placeholder="Enter Product Name" @input="stepOneValidation('text', $event)" />
@@ -181,18 +188,19 @@ const stepThreeValidation = () => {
               <span class="text-red-500 error-message"></span>
             </div>
           </div>
-          <div v-if="formStep.step2 === true">
+          <div ref="fileRef" v-if="formStep.step >= 2">
             <label>Upload Images</label>
             <input multiple v-on:change="stepTwoValidation" accept="image/x-png,image/gif,image/jpeg" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" aria-describedby="file_input_help" id="file_input" type="file" />
             <p class="mt-1 text-sm text-gray-500" id="file_input_help">PNG, JPG or JPEG only.</p>
             <span class="text-red-500 error-message"></span>
           </div>
-          <div v-if="formStep.step3 === true">
+          <div v-if="formStep.step >= 3">
             <label>Date/Time Created</label>
             <VueDatePicker v-model="formData.dateTimeCreated" @update:model-value="changeDateTime" :is-24="false" @blur="stepThreeValidation"></VueDatePicker>
+            <span class="text-red-500 error-message"></span>
           </div>
         </form>
-        <div class="w-full p-5" v-if="formStep.submit === true">
+        <div class="w-full p-5" v-if="formStep.step >= 4">
           <button class="bg-blue-500 text-white w-full p-2 rounded m-auto" @click="submitData">
             {{ formBuild.button }}
           </button>

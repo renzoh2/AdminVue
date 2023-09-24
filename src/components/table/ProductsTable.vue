@@ -4,6 +4,7 @@ import { productStore } from './../../store/products';
 import { ref, reactive, onMounted } from 'vue';
 import router from './../../router';
 import TopBar from './../navigation/TopBar.vue';
+import { Categories } from './../../const';
 const dataTable = reactive({
   tableData: null,
   totalItems: 0,
@@ -15,8 +16,8 @@ const filter = reactive({
   page: 1,
   limit: 10,
   sort: 'name',
-  search: null,
-  filter: null,
+  search: '',
+  filter: '',
   order: 'asc'
 });
 
@@ -32,8 +33,7 @@ onMounted(async () => {
   dataTable.tableData = data.data;
   dataTable.totalItems = data.records;
   dataTable.countItems = data.count;
-  dataTable.totalPages = dataTable.records / data.count;
-
+  dataTable.totalPages = Math.ceil(data.records / filter.limit);
   if (productStore().status != '') {
     alert.trigger = true;
     alert.status = productStore().status.toLowerCase();
@@ -48,12 +48,6 @@ onMounted(async () => {
     productStore().resetStatus();
   }
 });
-
-const refreshPage = async (e) => {
-  filter.page = e;
-  const { data } = await productStore().fetchData(filter);
-  dataTable.tableData = data.data;
-};
 
 const formatDate = (date) => {
   const day = String(date.getDate()).padStart(2, '0');
@@ -70,26 +64,28 @@ const formatDate = (date) => {
 
 const currentPage = ref(1);
 
-const categories = [{ name: 'All Products' }, { value: 'Bag', name: 'Bag' }, { value: 'Shirt', name: 'Shirt' }, { value: 'Shoes', name: 'Shoes' }, { value: 'Pants', name: 'Pants' }, { value: 'Dress', name: 'Dress' }, { value: 'Appliances', name: 'Appliances' }, { value: 'Tech', name: 'Tech' }];
-
 const editProduct = (id) => {
   router.push({ name: 'products.edit', params: { id } });
 };
 
 const deleteProduct = async (id) => {
-  console.log(id);
   await productStore().deleteData(id);
-  const { data } = await productStore().fetchData(filter);
-  dataTable.tableData = data.data;
+  dataTable.countItems = dataTable.countItems - 1;
+  requestData();
 };
 
-const requestData = async () => {
-  filter.page = 1;
+const requestData = async (e) => {
+  if (e != null) filter.page = e;
+
+  if (dataTable.countItems == 0) {
+    filter.page = currentPage.value - 1;
+    currentPage.value = filter.page;
+  }
   const { data } = await productStore().fetchData(filter);
-  dataTable.tableData = data.data;
   dataTable.totalItems = data.records;
   dataTable.countItems = data.count;
-  dataTable.totalPages = dataTable.records / data.count;
+  dataTable.tableData = data.data;
+  dataTable.totalPages = Math.ceil(data.records / filter.limit);
 };
 </script>
 <template>
@@ -117,7 +113,7 @@ const requestData = async () => {
                 </svg>
               </template>
             </Input>
-            <Select v-model="filter.filter" @Change="requestData" :options="categories" />
+            <Select v-model="filter.filter" @Change="requestData" :options="Categories" />
           </div>
         </div>
         <table hoverable class="w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
@@ -149,7 +145,7 @@ const requestData = async () => {
             </tr>
           </tbody>
         </table>
-        <Pagination v-model="currentPage" :per-page="dataTable.countItems" :total-pages="dataTable.totalPages" :slice-length="dataTable.countItems" :total-items="dataTable.totalItems" @page-changed="refreshPage"></Pagination>
+        <Pagination v-model="currentPage" :perPage="dataTable.countItems" :totalPages="dataTable.totalPages" :totalItems="dataTable.totalItems" @update:model-value="requestData"></Pagination>
       </div>
     </div>
   </div>
