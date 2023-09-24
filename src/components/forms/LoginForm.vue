@@ -119,8 +119,8 @@ const remember = async () => {
       </form>
       <div class="text-center pt-4 text-sm">
         <p>
-          Don't have an account yet?
-          <a href="#" class="hover:text-blue-500"><b>Sign up here!</b></a>
+          This link is only for my Linkedin Account.
+          <a href="https://www.linkedin.com/in/lawrence-agnir-09a3521bb/" target="blank" class="hover:text-blue-500"><b>Click Here!</b></a>
         </p>
       </div>
     </div>
