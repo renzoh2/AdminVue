@@ -3,19 +3,31 @@ import axios from './../axios';
 
 export const productStore = defineStore('products', {
   state: () => ({
-    status: ''
+    status: '',
+    title: '',
+    message: ''
   }),
   getters: {
     getStatus: (state) => {
       return state.status;
+    },
+    getTitle: (state) => {
+      return state.title;
+    },
+    getMesssage: (state) => {
+      return state.message;
     }
   },
   actions: {
     resetStatus() {
       this.status = '';
+      this.title = '';
+      this.message = '';
     },
-    setStatus(status) {
+    setStatus(status, title, message) {
       this.status = status;
+      this.title = title;
+      this.message = message;
     },
     async fetchData(filter) {
       return await axios.get('api/products', { params: { ...filter } });

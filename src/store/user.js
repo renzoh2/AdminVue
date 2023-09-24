@@ -1,17 +1,20 @@
 import { defineStore } from 'pinia';
 import axios from './../axios';
-import router from './../router';
 import CryptoJS from 'crypto-js';
 import cookies from 'vue-cookies';
 
 export const userStore = defineStore('users', {
   state: () => ({
     token: null,
-    isAuth: false
+    isAuth: false,
+    name: ''
   }),
   getters: {
     getIsAuth: (state) => {
       return state.isAuth;
+    },
+    getName: (state) => {
+      return state.name;
     }
   },
   actions: {
@@ -36,20 +39,16 @@ export const userStore = defineStore('users', {
     async removeCookie() {
       cookies.remove('u');
     },
+    async setLocalStore(token, name) {
+      this.token = token;
+      this.name = name;
+      this.isAuth = true;
+    },
     async login(form) {
-      const { data } = await axios.post('api/login', form);
-
-      if (data.status === 'Success') {
-        this.token = data.data.token;
-        this.isAuth = true;
-
-        router.push({ name: 'admin.index' });
-      }
+      return await axios.post('api/login', form);
     },
-    async user() {
-      await axios.get('api/user');
-    },
-    logout() {
+    async logout() {
+      await axios.post('api/logout');
       this.token = null;
       this.isAuth = false;
     }

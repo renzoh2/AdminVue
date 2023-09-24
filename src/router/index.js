@@ -18,13 +18,13 @@ const router = createRouter({
     {
       path: '/products/create',
       name: 'products.create',
-      component: () => import('../views/productCreateView.vue'),
+      component: () => import('../views/productFormView.vue'),
       meta: { requiresAuth: true }
     },
     {
       path: '/products/edit/:id',
       name: 'products.edit',
-      component: () => import('../views/productEditView.vue'),
+      component: () => import('../views/productFormView.vue'),
       meta: { requiresAuth: true },
       props: (route) => ({ id: route.query.id })
     }
