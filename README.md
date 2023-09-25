@@ -12,7 +12,7 @@ Follow the instructions there to install the backend.
 
 # INSTRUCTIONS
 
-Run the following. <br>
+Run the following: <br>
 For installation, use this command:
 
 - npm install
