@@ -5,6 +5,10 @@
 
 # REQUIREMENTS
 
+Programs/Software need to install:
+
+- Node.js 9.6.7
+
 Download/Pull the backend project for site. <br>
 Follow the instructions there to install the backend.
 
