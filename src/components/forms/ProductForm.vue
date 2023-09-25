@@ -129,7 +129,6 @@ const stepTwoValidation = (e) => {
   if (files.length === 0) {
     errorNode.innerHTML = formData.image === null && prop.identifier === 'create' ? 'No file. Please insert image file/s. ' : '';
     formStep.submit = falseChecker === false && prop.identifier === 'create' ? false : true;
-    console.log(formStep.submit);
     return;
   }
 
@@ -140,10 +139,10 @@ const stepTwoValidation = (e) => {
     }
   });
 
-  formStep.step = prop.identifier === 'edit' ? 4 : falseChecker === true ? 2 : 3;
+  formStep.step = falseChecker === true ? 2 : prop.identifier === 'edit' ? 4 : 3;
   formStep.submit = falseChecker === false ? true : false;
   if (falseChecker === false) formData.image = files;
-  errorNode.innerHTML = formData.image === null ? 'Invalid file/s. This is only accepts png, jpg and jpeg image file/s.' : '';
+  errorNode.innerHTML = formData.image === null ? 'Invalid file/s. This is only accepts PNG, JPG and JPEG image file/s.' : '';
 };
 
 const stepThreeValidation = () => {
